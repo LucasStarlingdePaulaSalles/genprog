@@ -9,7 +9,7 @@ class Node:
         self.__operation: Callable[[List[float]], float] = self.__do_const
         self.__values: List[float] = []
         self.children: List[Node] = []
-        self.idx = 0
+        self.depth = 0
 
     def set_type(self, type: bool):
         if not self.__unset_type:
@@ -98,16 +98,54 @@ def available_terminals(varc: int, coefs: List[int]) -> List[Node]:
 
     return nodes
 
-def bfs(root: Node):
+def bfs_find_parent(root: Node, moves: List[bool]) -> tuple[Node, int]:
+    while len(moves) > 1:          
+        move = moves.pop(0)
+
+        if root.children[move].is_terminal():
+            return root, move
+        
+        root = root.children[move]
+
+    move = moves.pop(0)
+    return root, move
+
+def print_node(root: Node):
     queue: List[Node] = [] 
     queue.append(root)
+    depth = root.depth
+    count = 0
 
     while queue:          
         node = queue.pop(0) 
-
-        print (node.idx, end = " ") 
-
-        for neighbour in node.children:
-            queue.append(neighbour)
+        if node.depth > depth:
+            print()
+            depth = node.depth
+            count = 0
+        
+        if count == 2:
+            print("|", end= " ")
+            count = 0
+        print (node.handle, end = " ") 
+        count += 1
+        for child in node.children:
+            child.depth = depth + 1
+            queue.append(child)
     
     print()
+
+def update_depth(root: Node) -> int:
+    queue: List[Node] = [] 
+    queue.append(root)
+    depth = root.depth
+
+    while queue:
+        node = queue.pop(0) 
+        if node.depth > depth:
+            depth = node.depth
+        
+        for child in node.children:
+            child.depth = depth + 1
+            queue.append(child)
+    
+    return depth
