@@ -1,7 +1,7 @@
 from copy import deepcopy
 from typing import List
 from math import sqrt
-from random import choices, random
+from random import choices, random, sample
 from genprog.modules.gene import available_non_terminals, available_terminals, calc_max_depth
 from genprog.modules.chromosome import Chromosome, grow, full
 
@@ -15,21 +15,35 @@ class Population:
         self.pop_fitness: List[float] = []
         self.gen = 0
         self.data = data
+        self.crossc = 0
+        self.cross_improvc = 0
+        self.unique: set[str] = set()
 
         terminals = available_terminals(varc, constants)
         non_terminals = available_non_terminals()
         # temporary 
         self.population = [Chromosome(self.max_depth, [grow,full], terminals, non_terminals) for _ in range(self.indc)]
         self.fitness(data)
+        self.mean_fitness = sum(self.pop_fitness)/len(self.pop_fitness)
 
-    def evolution(self):
+    def evolution(self, elite: int):
         target: Chromosome = self.population[0]
         sencond_parent = False
-
+        self.crossc = 0
+        self.cross_improvc = 0
+        self.unique = set()
         new_pop: List[Chromosome] = []
-        for _ in range(self.indc):
+        # Elitismo 
 
-            ind = self.roulette()
+        def fit_sort(ind: Chromosome):
+            return ind.fit_val
+
+        for ind in sorted(self.population, key=fit_sort)[:elite]:
+            new_pop.append(deepcopy(ind))
+
+        for _ in range(self.indc-elite):
+
+            ind = self.tournament()
 
             do_cross = random() <= self.pcross
 
@@ -50,19 +64,39 @@ class Population:
                     gene1.children[idx1] = gene2.children[idx2]
                     gene2.children[idx2] = aux
 
+                    ind1.update_fenotype()
+                    ind1.fitness(self.data)
+                    ind2.update_fenotype()
+                    ind2.fitness(self.data)
+
+                    mean_p_fit = (target.fit_val + ind.fit_val)/2
+
                     new_md1 = calc_max_depth(gene1)
                     if  new_md1 > self.max_depth:
-                        new_pop.append(target)
+                        new_pop.append(deepcopy(target))
+                        self.unique.add(target.fenotype)
                     else:
-                        ind1.depth = new_md1
+                        if new_md1 > ind1.depth: ind1.depth = new_md1
+                        self.crossc += 1
+                        if ind1.fit_val < mean_p_fit:
+                            self.cross_improvc += 1
+                        
                         new_pop.append(ind1)
+                        self.unique.add(ind1.fenotype)
+
                     
                     new_md2 = calc_max_depth(gene2)
                     if new_md2 > self.max_depth:
-                        new_pop.append(ind)
+                        new_pop.append(deepcopy(ind))
+                        self.unique.add(ind.fenotype)
                     else:
-                        ind2.depth = new_md2
+                        if new_md2 > ind2.depth: ind2.depth = new_md2
+                        self.crossc += 1
+                        if  ind2.fit_val < mean_p_fit:
+                            self.cross_improvc += 1
+                        
                         new_pop.append(ind2)
+                        self.unique.add(ind2.fenotype)
                     
                     sencond_parent = False
 
@@ -77,9 +111,12 @@ class Population:
             do_mutate = random() <= self.pmutate
             if do_mutate:
                 nind.mutate()
+                new_md = calc_max_depth(nind.root)
+                if new_md > nind.depth: nind.depth = new_md
 
         self.population.clear()
         self.population = new_pop
+        self.indc = len(new_pop)
         self.gen += 1
 
     
@@ -90,19 +127,23 @@ class Population:
         
         self.pop_fitness.clear()
         for ind in self.population:
-            sum_squared_err = 0
-            for vars in data:
-                err = ind.root.eval(vars[:-1]) - vars[-1]
-                squared_err = err**2
-                sum_squared_err += squared_err
-            
-            mean_squared_err = sum_squared_err / self.indc
+            rmse = ind.fitness(data)
+            self.pop_fitness.append(rmse)
+        
+        self.mean_fitness = sum(self.pop_fitness)/len(self.pop_fitness)
 
-            self.pop_fitness.append(sqrt(mean_squared_err))
-    
     def roulette(self) -> Chromosome:
         weights = [1 - (i/sum(self.pop_fitness)) for i in self.pop_fitness]
         return choices(self.population, weights=weights, k=1)[0]
 
+    def tournament(self) -> Chromosome:
+        tournament = sample(range(self.indc), k=2)
+        idx = tournament[0]
+        if self.pop_fitness[tournament[1]] < self.pop_fitness[idx]:
+            idx = tournament[1]
+
+        return self.population[idx]
+
     def stats(self):
-        print(f'{self.gen},{max(self.pop_fitness):.3f},{sum(self.pop_fitness)/self.indc:.3f},{min(self.pop_fitness):.3f}')
+        # print(f'{self.gen},{self.indc},{max(self.pop_fitness):.3f},{self.mean_fitness:.3f},{min(self.pop_fitness):.3f},{self.cross_improvc},{self.crossc-self.cross_improvc},{self.indc-len(self.unique)}')
+        print(f'{self.gen},{max(self.pop_fitness):.3f},{self.mean_fitness:.3f},{min(self.pop_fitness):.3f},{self.indc-len(self.unique)}')
