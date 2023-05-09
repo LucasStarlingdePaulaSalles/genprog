@@ -79,7 +79,7 @@ def available_non_terminals() -> List[Gene]:
         return ops.pop(0) / divisor
 
     nodes = [
-        Gene().operator('X', mul),
+        Gene().operator('*', mul),
         Gene().operator('+', add),
         Gene().operator('-', sub),
         Gene().operator('/', div)
@@ -149,3 +149,35 @@ def calc_max_depth(root: Gene) -> int:
             queue.append(child)
     
     return depth
+
+def print_infix(root: Gene):
+    terminal = len(root.children) == 0
+
+    if not terminal:
+        
+        if not root.children[0].is_terminal(): print('(', end='')
+        print_infix(root.children[0])
+        if not root.children[0].is_terminal(): print(')', end='')
+
+    print(root.handle, end='')
+
+    if not terminal:
+        if not root.children[1].is_terminal(): print('(', end='')
+        print_infix(root.children[1])
+        if not root.children[1].is_terminal(): print(')', end='')
+
+def get_fenotype(root: Gene, fenotype: List[str]):
+    terminal = len(root.children) == 0
+
+    if not terminal:
+        
+        if not root.children[0].is_terminal(): fenotype += '('
+        get_fenotype(root.children[0], fenotype)
+        if not root.children[0].is_terminal(): fenotype += ')'
+
+    fenotype += root.handle
+
+    if not terminal:
+        if not root.children[1].is_terminal(): fenotype += '('
+        get_fenotype(root.children[1], fenotype)
+        if not root.children[1].is_terminal(): fenotype += ')'
