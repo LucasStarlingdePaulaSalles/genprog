@@ -1,6 +1,6 @@
 from typing import List, Callable
 
-class Node:
+class Gene:
     def __init__(self):
         self.__unset_type = True
         self.__terminal: bool = False
@@ -8,7 +8,7 @@ class Node:
         self.handle: str = ''
         self.__operation: Callable[[List[float]], float] = self.__do_const
         self.__values: List[float] = []
-        self.children: List[Node] = []
+        self.children: List[Gene] = []
         self.depth = 0
 
     def set_type(self, type: bool):
@@ -62,7 +62,7 @@ class Node:
         return self.__terminal
 
 
-def available_non_terminals() -> List[Node]:
+def available_non_terminals() -> List[Gene]:
     def mul(ops: List[float]) -> float:
         return ops.pop(0) * ops.pop(0)
     
@@ -79,26 +79,26 @@ def available_non_terminals() -> List[Node]:
         return ops.pop(0) / divisor
 
     nodes = [
-        Node().operator('X', mul),
-        Node().operator('+', add),
-        Node().operator('-', sub),
-        Node().operator('/', div)
+        Gene().operator('X', mul),
+        Gene().operator('+', add),
+        Gene().operator('-', sub),
+        Gene().operator('/', div)
     ]
     return nodes
 
 
-def available_terminals(varc: int, coefs: List[int]) -> List[Node]:
+def available_terminals(varc: int, coefs: List[int] = []) -> List[Gene]:
     nodes = []
 
     for i in range(varc):
-        nodes.append(Node().variable(i))
+        nodes.append(Gene().variable(i))
     
     for coef in coefs:
-        nodes.append(Node().coeficient(coef))
+        nodes.append(Gene().coeficient(coef))
 
     return nodes
 
-def bfs_find_parent(root: Node, moves: List[bool]) -> tuple[Node, int]:
+def bfs_find_parent(root: Gene, moves: List[bool]) -> tuple[Gene, int]:
     while len(moves) > 1:          
         move = moves.pop(0)
 
@@ -110,8 +110,8 @@ def bfs_find_parent(root: Node, moves: List[bool]) -> tuple[Node, int]:
     move = moves.pop(0)
     return root, move
 
-def print_node(root: Node):
-    queue: List[Node] = [] 
+def print_node(root: Gene):
+    queue: List[Gene] = [] 
     queue.append(root)
     depth = root.depth
     count = 0
@@ -134,8 +134,8 @@ def print_node(root: Node):
     
     print()
 
-def update_depth(root: Node) -> int:
-    queue: List[Node] = [] 
+def calc_max_depth(root: Gene) -> int:
+    queue: List[Gene] = [] 
     queue.append(root)
     depth = root.depth
 

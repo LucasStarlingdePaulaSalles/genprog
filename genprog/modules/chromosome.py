@@ -1,19 +1,19 @@
 from copy import deepcopy
 from typing import List
 from random import choice, randint
-from genprog.modules.node import Node, bfs_find_parent
+from genprog.modules.gene import Gene, bfs_find_parent
 
 grow = 0
 full = 1
 
-class Chormossome:
-    def __init__(self, max_depth: int, methods: List[int], terminals: List[Node], non_terminals: List[Node]):
-        self.terminals: List[Node] = terminals
-        self.non_terminals: List[Node] = non_terminals
+class Chromosome:
+    def __init__(self, max_depth: int, methods: List[int], terminals: List[Gene], non_terminals: List[Gene]):
+        self.terminals: List[Gene] = terminals
+        self.non_terminals: List[Gene] = non_terminals
         self.max_depth: int = max_depth
-        self.root, self.depth = build(0,max_depth,methods, terminals, non_terminals)
+        self.root, self.depth = build(0,randint(1, self.max_depth),methods, terminals, non_terminals)
 
-    def crossover_choice(self) -> tuple[Node, int]:
+    def crossover_choice(self) -> tuple[Gene, int]:
         co_depth = randint(1, self.depth)
         bits = [0,1]
         moves = []
@@ -23,7 +23,10 @@ class Chormossome:
         return bfs_find_parent(self.root, moves)
     
     def mutate(self):
-        choice([self.__expansion_mutation, self.__point_mutation, self.__reduction_mutation])()
+        mutations = [self.__expansion_mutation, self.__point_mutation]
+        if self.depth > 1:
+            mutations.append(self.__reduction_mutation)
+        choice(mutations)()
     
     def __point_mutation(self):
         co_depth = randint(0, self.depth)
@@ -73,14 +76,13 @@ class Chormossome:
 def build( depth,
            max_depth,
            methods: List[int],
-           terminals: List[Node],
-           non_terminals: List[Node]
-        ) -> tuple[Node, int]:
+           terminals: List[Gene],
+           non_terminals: List[Gene]
+        ) -> tuple[Gene, int]:
 
     if depth == max_depth:
         node = deepcopy(choice(terminals))
         node.depth = depth
-        print(depth, '|', node.handle)        
 
         return node, depth
     
@@ -92,8 +94,6 @@ def build( depth,
         node = deepcopy(choice(terminals+non_terminals))
 
     node.depth = depth
-    
-    print(depth, '|', node.handle)        
 
     if node.is_terminal():
         return node, depth

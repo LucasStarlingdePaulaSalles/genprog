@@ -1,36 +1,34 @@
 from typing import List
-from genprog.modules.node import *
-from genprog.modules.tree import *
+from genprog.modules.chromosome import *
+from genprog.modules.population import Population
+from csv import reader
+import time
 
 def main():
-    terminals = available_terminals(3, [4])
-    non_terminals = available_non_terminals()
-    vars = [1.0,2.0,3.0]
+    start_time = time.time()
 
-    tree = Chormossome(3, [full], terminals, non_terminals)
-    tree2 = Chormossome(3, [full], terminals, non_terminals)
+    
+    data: List[List[float]] = []
 
-    print_node(tree.root)
-    print("---------------------------------------")
-    print_node(tree2.root)
-    print("---------------------------------------")
+    with open('data/datasets/synth1/synth1-train.csv') as csvfile:
+        spamreader = reader(csvfile)
+
+        for row in spamreader:
+
+            a = [float(x) for x in row]
+            data.append(a)
+    
+    pop = Population(7,500, len(data[0])-1, 0.9, 0.05, data)
+    pop.stats()
+    for _ in range(500):
+        pop.evolution()
+        pop.fitness(data)
+        pop.stats()
+
+    print("--- %s seconds ---" % (time.time() - start_time))
 
 
-    node, idx = tree.crossover_choice()
-    node2, idx2 = tree2.crossover_choice()
-
-    aux = node.children[idx]
-    node.children[idx] = node2.children[idx2]
-    node2.children[idx2] = aux
-
-
-    print_node(tree.root)
-    print("---------------------------------------")
-    print_node(tree2.root)
-    print("---------------------------------------")
-
-    print(update_depth(node), update_depth(node2))
-
+    
     
 if __name__ == '__main__':
     main()
