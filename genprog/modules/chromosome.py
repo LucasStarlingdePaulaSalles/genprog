@@ -1,7 +1,8 @@
 from copy import deepcopy
+from math import sqrt
 from typing import List
 from random import choice, randint
-from genprog.modules.gene import Gene, bfs_find_parent
+from genprog.modules.gene import *
 
 grow = 0
 full = 1
@@ -12,6 +13,14 @@ class Chromosome:
         self.non_terminals: List[Gene] = non_terminals
         self.max_depth: int = max_depth
         self.root, self.depth = build(0,randint(1, self.max_depth),methods, terminals, non_terminals)
+        self.fenotype: str = '&'
+        self.update_fenotype()
+        self.fit_val = 0
+
+    def update_fenotype(self):
+        fen: List[str] = []
+        get_fenotype(self.root, fen)
+        self.fenotype = ''.join(fen)
 
     def crossover_choice(self) -> tuple[Gene, int]:
         co_depth = randint(1, self.depth)
@@ -27,6 +36,19 @@ class Chromosome:
         if self.depth > 1:
             mutations.append(self.__reduction_mutation)
         choice(mutations)()
+        self.update_fenotype()
+    
+    def fitness(self, data: List[List[float]]):
+
+        sum_squared_err = 0
+        for vars in data:
+            err = self.root.eval(vars[:-1]) - vars[-1]
+            squared_err = err**2
+            sum_squared_err += squared_err
+        
+        mean_squared_err = sum_squared_err / len(data)
+        self.fit_val = sqrt(mean_squared_err)
+        return self.fit_val
     
     def __point_mutation(self):
         co_depth = randint(0, self.depth)
@@ -60,6 +82,8 @@ class Chromosome:
         
         parent, child_idx = bfs_find_parent(self.root, moves)
         parent.children[child_idx] = deepcopy(choice(self.terminals))
+
+        self.depth = calc_max_depth(self.root)
     
     def __expansion_mutation(self):
         bits = [0,1]
@@ -73,6 +97,10 @@ class Chromosome:
                                                [full, grow],
                                                self.terminals,
                                                self.non_terminals )
+        
+        new_depth = calc_max_depth(parent)
+        self.depth = new_depth if new_depth > self.depth else self.depth
+
 def build( depth,
            max_depth,
            methods: List[int],
