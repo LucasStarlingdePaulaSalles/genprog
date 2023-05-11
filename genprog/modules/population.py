@@ -21,19 +21,18 @@ class Population:
 
         terminals = available_terminals(varc, constants)
         non_terminals = available_non_terminals()
-        # temporary 
+        
         self.population = [Chromosome(self.max_depth, [grow,full], terminals, non_terminals) for _ in range(self.indc)]
         self.fitness(data)
         self.mean_fitness = sum(self.pop_fitness)/len(self.pop_fitness)
 
-    def evolution(self, elite: int):
+    def evolution(self, elite: int = 0, selection: str = 'roulette'):
         target: Chromosome = self.population[0]
         sencond_parent = False
         self.crossc = 0
         self.cross_improvc = 0
         self.unique = set()
         new_pop: List[Chromosome] = []
-        # Elitismo 
 
         def fit_sort(ind: Chromosome):
             return ind.fit_val
@@ -43,7 +42,16 @@ class Population:
 
         for _ in range(self.indc-elite):
 
-            ind = self.tournament()
+            if selection == 'roulette':
+                ind = self.roulette()
+            elif selection == 'tournament':
+                ind = self.tournament()
+            elif selection == 'lexicase':
+                ind = self.lexicase()
+            elif selection == 'random':
+                ind = self.random()
+            else:
+                raise Exception('Invalid selector')
 
             do_cross = random() <= self.pcross
 
@@ -131,6 +139,9 @@ class Population:
             self.pop_fitness.append(rmse)
         
         self.mean_fitness = sum(self.pop_fitness)/len(self.pop_fitness)
+    
+    def random(self) -> Chromosome:
+        return choices(self.population, k=1)[0]
 
     def roulette(self) -> Chromosome:
         weights = [1 - (i/sum(self.pop_fitness)) for i in self.pop_fitness]
@@ -144,6 +155,36 @@ class Population:
 
         return self.population[idx]
 
+    def lexicase(self) -> Chromosome:
+        cases =  sample(range(len(self.data)), len(self.data))
+        candidates = [x for x  in range(len(self.population))]
+
+        while len(cases) > 0 and len(candidates) > 1:
+            case_idx = cases.pop()
+            
+            best_fit = 1000000000
+            case_candidates = []
+        
+            for candidate_idx in candidates:
+                fit = self.population[candidate_idx].fitness([self.data[case_idx]], False)
+
+                if fit < best_fit:
+                    best_fit = fit
+                    case_candidates = [candidate_idx]
+
+                elif fit == best_fit:
+                    case_candidates.append(candidate_idx)
+            
+
+            candidates = case_candidates
+        
+        if len(candidates) > 1:
+            return self.population[choices(candidates,k=1)[0]]
+        
+        return self.population[candidates[0]]
+
     def stats(self):
-        # print(f'{self.gen},{self.indc},{max(self.pop_fitness):.3f},{self.mean_fitness:.3f},{min(self.pop_fitness):.3f},{self.cross_improvc},{self.crossc-self.cross_improvc},{self.indc-len(self.unique)}')
+        return max(self.pop_fitness), self.mean_fitness, min(self.pop_fitness), self.cross_improvc, self.crossc-self.cross_improvc, self.indc-len(self.unique)
+    
+    def print_stats(self):
         print(f'{self.gen},{max(self.pop_fitness):.3f},{self.mean_fitness:.3f},{min(self.pop_fitness):.3f},{self.indc-len(self.unique)}')

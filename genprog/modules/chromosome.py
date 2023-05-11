@@ -38,7 +38,7 @@ class Chromosome:
         choice(mutations)()
         self.update_fenotype()
     
-    def fitness(self, data: List[List[float]]):
+    def fitness(self, data: List[List[float]], inplace: bool = True):
 
         sum_squared_err = 0
         for vars in data:
@@ -47,8 +47,12 @@ class Chromosome:
             sum_squared_err += squared_err
         
         mean_squared_err = sum_squared_err / len(data)
-        self.fit_val = sqrt(mean_squared_err)
-        return self.fit_val
+        rmse = sqrt(mean_squared_err)
+        
+        if inplace:
+            self.fit_val = rmse
+
+        return rmse
     
     def __point_mutation(self):
         co_depth = randint(0, self.depth)
@@ -92,13 +96,12 @@ class Chromosome:
             moves.append(choice(bits))
         
         parent, child_idx = bfs_find_parent(self.root, moves)
-        parent.children[child_idx], _ = build( parent.depth+1,
+        parent.children[child_idx], new_depth = build( parent.depth+1,
                                                self.max_depth,
                                                [full, grow],
                                                self.terminals,
                                                self.non_terminals )
         
-        new_depth = calc_max_depth(parent)
         self.depth = new_depth if new_depth > self.depth else self.depth
 
 def build( depth,
@@ -108,6 +111,9 @@ def build( depth,
            non_terminals: List[Gene]
         ) -> tuple[Gene, int]:
 
+    if depth > max_depth:
+        raise Exception('Building on invalid depth')
+    
     if depth == max_depth:
         node = deepcopy(choice(terminals))
         node.depth = depth
