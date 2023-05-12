@@ -1,4 +1,5 @@
 from typing import List, Callable
+from math import inf 
 
 class Gene:
     def __init__(self):
@@ -74,7 +75,7 @@ def available_non_terminals() -> List[Gene]:
     def div(ops: List[float]) -> float:
         divisor = ops.pop(1)
         if divisor == 0:
-            return 100000000.0
+            return inf
         return ops.pop(0) / divisor
 
     nodes = [

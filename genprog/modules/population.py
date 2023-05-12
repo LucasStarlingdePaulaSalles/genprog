@@ -1,9 +1,10 @@
 from copy import deepcopy
 from typing import List
-from math import sqrt
 from random import choices, random, sample
 from genprog.modules.gene import available_non_terminals, available_terminals, calc_max_depth
 from genprog.modules.chromosome import Chromosome, grow, full
+from math import inf 
+
 
 class Population:
     def __init__(self, max_depth: int, indc: int, varc: int, pcross: float, pmutate: float, data: List[List[float]], constants: List[int] = []) -> None:
@@ -162,7 +163,7 @@ class Population:
         while len(cases) > 0 and len(candidates) > 1:
             case_idx = cases.pop()
             
-            best_fit = 1000000000
+            best_fit = inf
             case_candidates = []
         
             for candidate_idx in candidates:
