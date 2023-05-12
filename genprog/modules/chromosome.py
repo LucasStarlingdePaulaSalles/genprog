@@ -29,7 +29,7 @@ class Chromosome:
         for _ in range(co_depth):
             moves.append(choice(bits))
 
-        return bfs_find_parent(self.root, moves)
+        return find_parent(self.root, moves)
     
     def mutate(self):
         mutations = [self.__expansion_mutation, self.__point_mutation]
@@ -67,7 +67,7 @@ class Chromosome:
             for _ in range(co_depth):
                 moves.append(choice(bits))
 
-            parent, child_idx = bfs_find_parent(self.root, moves)
+            parent, child_idx = find_parent(self.root, moves)
             
             if parent.children[child_idx].is_terminal():
                 parent.children[child_idx] = deepcopy(choice(self.terminals))
@@ -84,7 +84,7 @@ class Chromosome:
         for _ in range(co_depth):
             moves.append(choice(bits))
         
-        parent, child_idx = bfs_find_parent(self.root, moves)
+        parent, child_idx = find_parent(self.root, moves)
         parent.children[child_idx] = deepcopy(choice(self.terminals))
 
         self.depth = calc_max_depth(self.root)
@@ -95,7 +95,7 @@ class Chromosome:
         for _ in range(self.depth):
             moves.append(choice(bits))
         
-        parent, child_idx = bfs_find_parent(self.root, moves)
+        parent, child_idx = find_parent(self.root, moves)
         parent.children[child_idx], new_depth = build( parent.depth+1,
                                                self.max_depth,
                                                [full, grow],
@@ -117,7 +117,6 @@ def build( depth,
     if depth == max_depth:
         node = deepcopy(choice(terminals))
         node.depth = depth
-
         return node, depth
     
     method = choice(methods)

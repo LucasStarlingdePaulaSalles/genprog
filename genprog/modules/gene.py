@@ -11,7 +11,7 @@ class Gene:
         self.children: List[Gene] = []
         self.depth = 0
 
-    def set_type(self, type: bool):
+    def set_terminal(self, type: bool):
         if not self.__unset_type:
             raise Exception('ERR001: Setting node type for typed node')
         else:
@@ -19,20 +19,20 @@ class Gene:
             self.__unset_type = False
     
     def variable(self, var: int):
-        self.set_type(True)
+        self.set_terminal(True)
         self.handle = f'x{var}'
         self.__var = var
         self.__operation = self.__do_variable
         return self
     
     def coeficient(self, value: int):
-        self.set_type(True)
+        self.set_terminal(True)
         self.__values = [float(value)]
         self.handle = f'C{value}'
         return self
 
     def operator(self, handle: str, operation: Callable[[List[float]],float]):
-        self.set_type(False)
+        self.set_terminal(False)
         self.handle = handle
         self.__operation = operation
         return self
@@ -41,7 +41,6 @@ class Gene:
         if self.__unset_type:
             raise Exception('ERR002: Tring to resolve unset node')
         
-
         if not self.__terminal:
             for child in self.children:
                 step = child.eval(vars)
@@ -98,7 +97,7 @@ def available_terminals(varc: int, coefs: List[int] = []) -> List[Gene]:
 
     return nodes
 
-def bfs_find_parent(root: Gene, moves: List[bool]) -> tuple[Gene, int]:
+def find_parent(root: Gene, moves: List[int]) -> tuple[Gene, int]:
     while len(moves) > 1:          
         move = moves.pop(0)
 
