@@ -6,6 +6,7 @@ from random import seed
 from csv import reader
 import time
 import argparse as ap
+import numpy as np
 
 def main():
 
@@ -13,6 +14,7 @@ def main():
                     description='Genetic programming implementation by Lucas Starling')
 
     parser.add_argument('filename')           
+    parser.add_argument('rounds')
     parser.add_argument('selection')      # roulette, tournament, lexicase, random
     parser.add_argument('population')     # 50, 100, 500
     parser.add_argument('generation')     # 50, 100, 500
@@ -56,13 +58,13 @@ def main():
         cross_worsenc_stat[i+1] = []
         unique_stat[i+1] = []
 
-    for i in range(30):
+    for i in range(int(args.rounds)):
         if args.random_seed:
             seed(int(args.random_seed)+i)
 
         pop = Population(7, int(args.population), len(data[0])-1, float(args.cross_prob), float(args.mutate_prob), data)
         for j in range(int(args.generation)):
-            pop.evolution(elitism,'tournament')
+            pop.evolution(elitism, args.selection)
             pop.fitness(data)
             max, mean, min, cross_improvec, cross_worsenc, unique = pop.stats()
             max_stat[j+1].append(max)
@@ -86,7 +88,7 @@ def main():
 
     print("--- %s seconds ---" % (time.time() - start_time))
 
-    print(min_stat[50])
+    print(np.std(min_stat[50]))
 
 
     

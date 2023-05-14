@@ -62,9 +62,11 @@ class Population:
                     sencond_parent = True
 
                 else:
+                    # Crossover individuals
                     ind1 = deepcopy(target)
                     ind2 = deepcopy(ind)
 
+                    # Crossover procedure
                     gene1, idx1 = ind1.crossover_choice()
                     gene2, idx2 = ind2.crossover_choice()
 
@@ -169,11 +171,12 @@ class Population:
             for candidate_idx in candidates:
                 fit = self.population[candidate_idx].fitness([self.data[case_idx]], False)
 
-                if fit < best_fit:
+                dif = abs(best_fit - fit)
+                if fit < best_fit - 0.01:
                     best_fit = fit
                     case_candidates = [candidate_idx]
 
-                elif fit == best_fit:
+                elif dif <= 0.01:
                     case_candidates.append(candidate_idx)
             
 

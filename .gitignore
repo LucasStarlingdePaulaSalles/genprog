@@ -7,8 +7,8 @@ __pycache__/
 *.so
 
 TODO
-data/
-test/
+datasets/
+exp/
 
 # Distribution / packaging
 .Python

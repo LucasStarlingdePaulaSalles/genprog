@@ -62,41 +62,62 @@ class Gene:
         return self.__terminal
 
 
-def available_non_terminals() -> List[Gene]:
-    def mul(ops: List[float]) -> float:
-        return ops.pop(0) * ops.pop(0)
-    
-    def add(ops: List[float]) -> float:
-        return ops.pop(0) + ops.pop(0)
-    
-    def sub(ops: List[float]) -> float:
-        return ops.pop(0) - ops.pop(0)
-    
-    def div(ops: List[float]) -> float:
-        divisor = ops.pop(1)
-        if divisor == 0:
-            return inf
-        return ops.pop(0) / divisor
+def mul(ops: List[float]) -> float:
+    return ops.pop(0) * ops.pop(0)
 
-    nodes = [
-        Gene().operator('*', mul),
-        Gene().operator('+', add),
-        Gene().operator('-', sub),
-        Gene().operator('/', div)
-    ]
-    return nodes
+def add(ops: List[float]) -> float:
+    return ops.pop(0) + ops.pop(0)
 
+def sub(ops: List[float]) -> float:
+    return ops.pop(0) - ops.pop(0)
 
-def available_terminals(varc: int, coefs: List[int] = []) -> List[Gene]:
-    nodes = []
+def div(ops: List[float]) -> float:
+    divisor = ops.pop(1)
+    if divisor == 0:
+        return 10000
+    return ops.pop(0) / divisor
+
+def available_non_terminals() -> List[str]:
+    options = ['*','+','-','/']
+    return options
+
+def get_non_terminal(handle: str) -> Gene:
+    if handle == '*':
+        return Gene().operator('*', mul)
+    elif handle == '+':
+        return Gene().operator('+', add)
+    elif handle == '-':
+        return Gene().operator('-', sub)
+    elif handle == '/':
+        return Gene().operator('/', div)
+    else:
+        raise Exception('ERR003: Invalid non terminal handle')
+
+def available_terminals(varc: int, coefs: List[int] = []) -> List[str]:
+    options = []
 
     for i in range(varc):
-        nodes.append(Gene().variable(i))
+        options.append(f'x{i}')
     
     for coef in coefs:
-        nodes.append(Gene().coeficient(coef))
+        options.append(f'C{coef}')
 
-    return nodes
+    return options
+
+def get_terminal(handle: str) -> Gene:
+
+    if handle[0] == 'x':
+        return Gene().variable(int(handle[1:]))
+    elif handle[0] == 'C':
+        return Gene().coeficient(int(handle[1:]))
+    else:
+        raise Exception('ERR004: invalid terminal handle')
+
+def get_gene(handle: str) -> Gene:
+    if handle[0] == 'x' or handle[0] == 'C':
+        return get_terminal(handle)
+    else: 
+        return get_non_terminal(handle) 
 
 def find_parent(root: Gene, moves: List[int]) -> tuple[Gene, int]:
     while len(moves) > 1:          
