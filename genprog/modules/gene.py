@@ -3,14 +3,14 @@ from math import inf
 
 class Gene:
     def __init__(self):
+        self.depth = 0
+        self.handle: str = ''
+        self.children: List[Gene] = []
         self.__unset_type = True
         self.__terminal: bool = False
         self.__var: int = -1
-        self.handle: str = ''
         self.__operation: Callable[[List[float]], float] = self.__do_const
         self.__values: List[float] = []
-        self.children: List[Gene] = []
-        self.depth = 0
 
     def set_terminal(self, type: bool):
         if not self.__unset_type:
